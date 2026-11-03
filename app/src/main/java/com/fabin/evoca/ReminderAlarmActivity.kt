@@ -1,3 +1,5 @@
+
+
 package com.fabin.evoca
 
 import android.app.AlarmManager
@@ -12,6 +14,7 @@ import android.widget.Toast
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.lifecycle.lifecycleScope
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -69,7 +72,6 @@ import com.fabin.evoca.ui.theme.EvocaSans
 import com.fabin.evoca.ui.theme.EvocaSerif
 import com.fabin.evoca.ui.theme.EvocaSurface
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -150,10 +152,10 @@ class ReminderAlarmActivity : ComponentActivity() {
 
                     reminder?.let { currentReminder ->
 
-                        // Cancel escalation
+                        // Cancel escalation.
                         cancelEscalation()
 
-                        // Cancel current notification
+                        // Cancel current notification.
                         val notificationManager =
                             getSystemService(
                                 Context.NOTIFICATION_SERVICE
@@ -163,27 +165,23 @@ class ReminderAlarmActivity : ComponentActivity() {
                             currentReminder.id
                         )
 
-                        CoroutineScope(
-                            Dispatchers.IO
-                        ).launch {
+                        lifecycleScope.launch {
 
-                            AppDatabase
-                                .getDatabase(
-                                    applicationContext
-                                )
-                                .reminderDao()
-                                .updateReminder(
-                                    currentReminder.copy(
-                                        status = "DONE"
+                            withContext(Dispatchers.IO) {
+
+                                AppDatabase
+                                    .getDatabase(
+                                        applicationContext
                                     )
-                                )
-
-                            withContext(
-                                Dispatchers.Main
-                            ) {
-
-                                finish()
+                                    .reminderDao()
+                                    .updateReminder(
+                                        currentReminder.copy(
+                                            status = "DONE"
+                                        )
+                                    )
                             }
+
+                            finish()
                         }
                     }
                 }
@@ -304,31 +302,27 @@ class ReminderAlarmActivity : ComponentActivity() {
                     "ACTIVE"
             )
 
-        CoroutineScope(
-            Dispatchers.IO
-        ).launch {
+        lifecycleScope.launch {
 
-            AppDatabase
-                .getDatabase(
-                    applicationContext
-                )
-                .reminderDao()
-                .updateReminder(
-                    updatedReminder
-                )
+            withContext(Dispatchers.IO) {
 
-            withContext(
-                Dispatchers.Main
-            ) {
-
-                Toast.makeText(
-                    this@ReminderAlarmActivity,
-                    "Reminder rescheduled",
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                finish()
+                AppDatabase
+                    .getDatabase(
+                        applicationContext
+                    )
+                    .reminderDao()
+                    .updateReminder(
+                        updatedReminder
+                    )
             }
+
+            Toast.makeText(
+                this@ReminderAlarmActivity,
+                "Reminder rescheduled",
+                Toast.LENGTH_SHORT
+            ).show()
+
+            finish()
         }
     }
 
@@ -375,32 +369,9 @@ class ReminderAlarmActivity : ComponentActivity() {
             return
         }
 
-        val alarmManager =
-            getSystemService(
-                Context.ALARM_SERVICE
-            ) as AlarmManager
-
-        val escalationIntent =
-            Intent(
-                this,
-                ReminderAlarmReceiver::class.java
-            ).apply {
-
-                action =
-                    ReminderAlarmReceiver.ACTION_ESCALATE
-            }
-
-        val escalationPendingIntent =
-            PendingIntent.getBroadcast(
-                this,
-                reminderId,
-                escalationIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or
-                        PendingIntent.FLAG_IMMUTABLE
-            )
-
-        alarmManager.cancel(
-            escalationPendingIntent
+        ReminderAlarmReceiver.cancelEscalation(
+            this,
+            reminderId
         )
     }
 }

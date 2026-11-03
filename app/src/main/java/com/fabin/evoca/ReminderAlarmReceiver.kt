@@ -1,6 +1,4 @@
-
 package com.fabin.evoca
-
 
 import android.app.AlarmManager
 import android.app.NotificationChannel
@@ -34,10 +32,7 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
 
         createChannel(context)
 
-        if (
-            intent.action ==
-            ACTION_ESCALATE
-        ) {
+        if (intent.action == ACTION_ESCALATE) {
 
             showFullScreenNotification(
                 context,
@@ -72,16 +67,29 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
         private const val ESCALATION_DELAY =
             5 * 60 * 1000L
 
-        fun createChannel(context: Context) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        // ---------------------------------------------------------
+        // NOTIFICATION CHANNEL
+        // ---------------------------------------------------------
 
-                val soundUri = Uri.parse(
-                    "android.resource://${context.packageName}/${R.raw.evoca_chime}"
-                )
+        fun createChannel(
+            context: Context
+        ) {
+
+            if (
+                Build.VERSION.SDK_INT >=
+                Build.VERSION_CODES.O
+            ) {
+
+                val soundUri =
+                    Uri.parse(
+                        "android.resource://${context.packageName}/${R.raw.evoca_chime}"
+                    )
 
                 val audioAttributes =
                     AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                        .setUsage(
+                            AudioAttributes.USAGE_NOTIFICATION
+                        )
                         .setContentType(
                             AudioAttributes.CONTENT_TYPE_SONIFICATION
                         )
@@ -118,6 +126,10 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
             }
         }
 
+        // ---------------------------------------------------------
+        // REMINDER ACTIVITY PENDING INTENT
+        // ---------------------------------------------------------
+
         private fun createAlarmPendingIntent(
             context: Context,
             reminderId: Int
@@ -143,6 +155,10 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
                         PendingIntent.FLAG_IMMUTABLE
             )
         }
+
+        // ---------------------------------------------------------
+        // ESCALATION PENDING INTENT
+        // ---------------------------------------------------------
 
         private fun createEscalationPendingIntent(
             context: Context,
@@ -174,6 +190,10 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
             )
         }
 
+        // ---------------------------------------------------------
+        // NORMAL NOTIFICATION
+        // ---------------------------------------------------------
+
         private fun showNormalNotification(
             context: Context,
             reminderId: Int
@@ -192,6 +212,9 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
                 )
                     .setSmallIcon(
                         R.mipmap.ic_launcher
+                    )
+                    .setContentTitle(
+                        "Evoca"
                     )
                     .setContentText(
                         "Your reminder is due"
@@ -220,6 +243,10 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
             )
         }
 
+        // ---------------------------------------------------------
+        // ESCALATION / FULL-SCREEN NOTIFICATION
+        // ---------------------------------------------------------
+
         private fun showFullScreenNotification(
             context: Context,
             reminderId: Int
@@ -239,8 +266,11 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
                     .setSmallIcon(
                         R.mipmap.ic_launcher
                     )
+                    .setContentTitle(
+                        "Evoca"
+                    )
                     .setContentText(
-                        "Your reminder is due"
+                        "Your reminder is still waiting"
                     )
                     .setContentIntent(
                         pendingIntent
@@ -270,6 +300,10 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
             )
         }
 
+        // ---------------------------------------------------------
+        // SCHEDULE 5-MINUTE ESCALATION
+        // ---------------------------------------------------------
+
         private fun scheduleEscalation(
             context: Context,
             reminderId: Int
@@ -296,6 +330,9 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
                 !alarmManager.canScheduleExactAlarms()
             ) {
 
+                // Exact alarm permission is unavailable,
+                // so use a normal alarm as a fallback.
+
                 alarmManager.set(
                     AlarmManager.RTC_WAKEUP,
                     triggerTime,
@@ -311,6 +348,10 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
                 )
             }
         }
+
+        // ---------------------------------------------------------
+        // CANCEL 5-MINUTE ESCALATION
+        // ---------------------------------------------------------
 
         fun cancelEscalation(
             context: Context,

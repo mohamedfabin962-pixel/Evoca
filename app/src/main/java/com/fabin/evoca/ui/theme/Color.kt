@@ -1,6 +1,6 @@
 package com.fabin.evoca.ui.theme
 
-import androidx.compose.ui.graphics.Color
+        import androidx.compose.ui.graphics.Color
 
 // Evoca background
 val EvocaBackground = Color(0xFFF4F0E8)

@@ -1,17 +1,16 @@
 package com.fabin.evoca.ui.theme
 
 import android.app.Activity
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
+
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
+
 import androidx.core.view.WindowCompat
 
 private val EvocaLightColors = lightColorScheme(
-
     primary = EvocaGreen,
     onPrimary = Color.White,
 
@@ -41,12 +40,8 @@ private val EvocaLightColors = lightColorScheme(
 
 @Composable
 fun EvocaTheme(
-    darkTheme: Boolean = false,
-    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = EvocaLightColors
-
     val view = LocalView.current
 
     if (!view.isInEditMode) {
@@ -61,7 +56,7 @@ fun EvocaTheme(
     }
 
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = EvocaLightColors,
         typography = EvocaTypography,
         content = content
     )

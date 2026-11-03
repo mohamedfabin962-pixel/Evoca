@@ -2,10 +2,10 @@ package com.fabin.evoca.viewmodel
 
 import android.app.AlarmManager
 import android.app.Application
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.app.NotificationManager
 
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -28,7 +28,6 @@ class ReminderViewModel(
             .getDatabase(application)
             .reminderDao()
 
-
     // ---------------------------------------------------------
     // SCHEDULED REMINDERS
     // ---------------------------------------------------------
@@ -43,7 +42,6 @@ class ReminderViewModel(
                 initialValue = emptyList()
             )
 
-
     // ---------------------------------------------------------
     // QUICK REMINDERS
     // ---------------------------------------------------------
@@ -57,7 +55,6 @@ class ReminderViewModel(
                 started = SharingStarted.WhileSubscribed(5000),
                 initialValue = emptyList()
             )
-
 
     // ---------------------------------------------------------
     // ADD REMINDER
@@ -83,7 +80,6 @@ class ReminderViewModel(
         }
     }
 
-
     // ---------------------------------------------------------
     // DELETE REMINDER
     // ---------------------------------------------------------
@@ -95,12 +91,10 @@ class ReminderViewModel(
         val context =
             getApplication<Application>()
 
-
         val alarmManager =
             context.getSystemService(
                 Context.ALARM_SERVICE
             ) as AlarmManager
-
 
         // Cancel the original scheduled alarm
 
@@ -109,13 +103,11 @@ class ReminderViewModel(
                 context,
                 ReminderAlarmReceiver::class.java
             ).apply {
-
                 putExtra(
                     "REMINDER_ID",
                     reminder.id
                 )
             }
-
 
         val pendingIntent =
             PendingIntent.getBroadcast(
@@ -126,11 +118,9 @@ class ReminderViewModel(
                         PendingIntent.FLAG_IMMUTABLE
             )
 
-
         alarmManager.cancel(
             pendingIntent
         )
-
 
         // Cancel the 5-minute escalation alarm
 
@@ -139,7 +129,6 @@ class ReminderViewModel(
             reminder.id
         )
 
-
         // Remove notification
 
         val notificationManager =
@@ -147,11 +136,9 @@ class ReminderViewModel(
                 Context.NOTIFICATION_SERVICE
             ) as NotificationManager
 
-
         notificationManager.cancel(
             reminder.id
         )
-
 
         // Delete from Room
 
@@ -161,12 +148,9 @@ class ReminderViewModel(
                 reminder
             )
 
-            // NO loadReminders()
-            //
             // Room Flow automatically updates the UI.
         }
     }
-
 
     // ---------------------------------------------------------
     // UPDATE REMINDER
@@ -186,7 +170,6 @@ class ReminderViewModel(
         }
     }
 
-
     // ---------------------------------------------------------
     // MARK AS DONE
     // ---------------------------------------------------------
@@ -194,6 +177,60 @@ class ReminderViewModel(
     fun markAsDone(
         reminder: Reminder
     ) {
+
+        val context =
+            getApplication<Application>()
+
+        // Cancel the original scheduled alarm
+
+        val alarmManager =
+            context.getSystemService(
+                Context.ALARM_SERVICE
+            ) as AlarmManager
+
+        val alarmIntent =
+            Intent(
+                context,
+                ReminderAlarmReceiver::class.java
+            ).apply {
+                putExtra(
+                    "REMINDER_ID",
+                    reminder.id
+                )
+            }
+
+        val pendingIntent =
+            PendingIntent.getBroadcast(
+                context,
+                reminder.id,
+                alarmIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or
+                        PendingIntent.FLAG_IMMUTABLE
+            )
+
+        alarmManager.cancel(
+            pendingIntent
+        )
+
+        // Cancel the 5-minute escalation alarm
+
+        ReminderAlarmReceiver.cancelEscalation(
+            context,
+            reminder.id
+        )
+
+        // Remove any active notification
+
+        val notificationManager =
+            context.getSystemService(
+                Context.NOTIFICATION_SERVICE
+            ) as NotificationManager
+
+        notificationManager.cancel(
+            reminder.id
+        )
+
+        // Mark reminder as DONE
 
         viewModelScope.launch {
 
